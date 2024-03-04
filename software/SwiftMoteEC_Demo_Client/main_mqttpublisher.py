@@ -11,7 +11,7 @@ import keyboard
 import bleak
 from bleak import BleakClient, BleakScanner, BleakError
 
-import paho.mqtt.publich as publish
+import paho.mqtt.publish as publish
 
 SENSOR_SERVICE_UUID = "350a1b80-cf4b-11e1-ac36-0002a5d5c51b"
 SENSOR_DATA_UUID = "340a1b80-cf4b-11e1-ac36-0002a5d5c51b"
@@ -105,28 +105,28 @@ async def notification_handler1(sender, data):
 
     #Publish raw data to MQTT broker
     message = ','.join([str(x) for x in data_tuple])
-    publish.single("HPS/text/SWV_DATA", message, hostname="mqtt.eclipseprojects.io")
+    publish.single("CMC/swiftmote/SWV_DATA", message, hostname="mqtt.eclipseprojects.io")
 
     if volt_datapoints != 0:
-        with open(filename2, 'a', newline='') as file2:
-            writer = csv.writer(file2)
-            for value in data_tuple:
-                writer.writerow([value])
+        #with open(filename2, 'a', newline='') as file2:
+        #    writer = csv.writer(file2)
+        #    for value in data_tuple:
+        #        writer.writerow([value])
         transformed_results = []
         for value in data_tuple:
             transformed_result = ((float((int(value) - 32768))/AdcPgaGain) * ADCRefVolt/32768 * kFactor)/RtiaValue_Magnitude * 1e3
             # transformed_result = (value / 2) + 2
             transformed_results.append(transformed_result)
         
-	#Publish transformed_results to MQTT broker
-	message_trns = ",".join([str(x) for x in transformed_results])
-	publish.single("HPS/text/SWV_TRANS_DATA", message_trns, hostname="mqtt.eclipseprojects.io")
+        #Publish transformed_results to MQTT broker
+        message_trns = ",".join([str(x) for x in transformed_results])
+        publish.single("CMC/swiftmote/SWV_TRANS_DATA", message_trns, hostname="mqtt.eclipseprojects.io")
 
-	with open(filename1, 'a', newline='') as file1:
-            writer = csv.writer(file1)
-            for element in transformed_results:
-                writer.writerow([element])
-        await asyncio.sleep(0.5)
+        #with open(filename1, 'a', newline='') as file1:
+        #    writer = csv.writer(file1)
+        #    for element in transformed_results:
+        #        writer.writerow([element])
+        #    await asyncio.sleep(0.5)
 
     if total_received >= volt_datapoints:
         total_received = 0
